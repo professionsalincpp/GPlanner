@@ -5,6 +5,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 from constants import *
+from .planner import Planner
 import os
 import shutil
 
@@ -23,22 +24,27 @@ class GPlanner(object):
         self.top_frame = CTkFrame(self.main_frame, **TOP_FRAME_STYLE, height=30)
         self.top_frame.pack(fill="x", side="top")
 
-        # Initialize main canvas
-        self.canvas = CTkCanvas(self.main_frame)
-        self.canvas.pack(fill="both", expand=True)
+        # Initialize main planner
+        self.planner = Planner(self.main_frame)
+        self.planner.pack(fill="both", expand=True)
+
+    @property
+    def mouse_coordinates(self):
+        return self.planner.get_fixed_coords(self.planner.winfo_pointerx() - self.planner.winfo_rootx(), self.planner.winfo_pointery() - self.planner.winfo_rooty())
 
     def run(self):
-        self.update_canvas()
-        self.canvas.bind("<Motion>", self.on_mouse_pos_change)
+        self.update_planner()
+        self.planner.bind("<Motion>", self.on_mouse_pos_change)
         self.root.mainloop()
 
-    def update_canvas(self):
-        self.canvas.delete("all")
+    def update_planner(self):
+        self.planner.delete("all")
         img = ImageTk.PhotoImage(Image.open("class_dark.png"))
-        self.canvas.create_image(0, 0, anchor="nw", image=img)
-        self.canvas.image = img
-        self.canvas.after(100, self.update_canvas)
+        self.planner.create_image(0, 0, anchor="nw", image=img)
+        self.planner.image = img
+        x, y = self.mouse_coordinates
+        self.planner.create_text(*self.planner.get_fixed_coords(-100, -50), text=f"X: {x}, Y: {y}", font=("Consolas", 14))
+        self.planner.after(100, self.update_planner)
 
     def on_mouse_pos_change(self, event):
-        print(event.x, event.y)
-
+        print(self.mouse_coordinates)
